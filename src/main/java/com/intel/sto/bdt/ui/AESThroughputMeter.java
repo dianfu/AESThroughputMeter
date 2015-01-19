@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.intel.sto.bdt.ui; 
+package com.intel.sto.bdt.ui;
 
 import java.awt.Color;
 import java.awt.Container;
@@ -40,7 +40,7 @@ import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import com.intel.sto.bdt.driver.STOBenchMark;
+import com.intel.sto.bdt.driver.*;
 
 public class AESThroughputMeter implements ActionListener, ChangeListener {
   JFrame frame = null;
@@ -91,7 +91,8 @@ public class AESThroughputMeter implements ActionListener, ChangeListener {
      * int anchor, int fill,
      * Insets insets, int ipadx, int ipady
      */
-    //GridBagConstraints c = new GridBagConstraints(0,0,10,8,(double)0,(double)0,10,0,new Insets(0,0,0,0),1,1);
+    //GridBagConstraints c = new GridBagConstraints(0,0,10,8,(double)0,(double)0,10,0,new Insets
+    // (0,0,0,0),1,1);
     GridBagConstraints c = new GridBagConstraints();
     c.fill = GridBagConstraints.HORIZONTAL;
     c.weightx = 0.5;
@@ -174,6 +175,7 @@ public class AESThroughputMeter implements ActionListener, ChangeListener {
     int speed;        // MB/s
     int timeUsed;     //seconds
     int percentage;   // %
+
     public Progress(int speed, int timeUsed, int percentage) {
       this.speed = speed;
       this.timeUsed = timeUsed;
@@ -183,18 +185,23 @@ public class AESThroughputMeter implements ActionListener, ChangeListener {
     public int getSpeed() {
       return speed;
     }
+
     public void setSpeed(int speed) {
       this.speed = speed;
     }
+
     public int getTimeUsed() {
       return timeUsed;
     }
+
     public void setTimeUsed(int timeUsed) {
       this.timeUsed = timeUsed;
     }
+
     public int getPercentage() {
       return this.percentage;
     }
+
     public void setPercentage(int percentage) {
       this.percentage = percentage;
     }
@@ -211,16 +218,12 @@ public class AESThroughputMeter implements ActionListener, ChangeListener {
     int speed = 0;
     int timeUsed = 0;
     int percentage = 0;
-    STOBenchMark driver = new STOBenchMark();
+    EncryptionDemoMain driver = new EncryptionDemoMain();
 
     private void startDriver() {
       new Thread(new Runnable() {
         public void run() {
-            try {
-              driver.start();
-            } catch (IOException e) {
-              e.printStackTrace();
-            }
+          driver.start();
         }
       }).start();
     }
@@ -267,7 +270,7 @@ public class AESThroughputMeter implements ActionListener, ChangeListener {
       UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
     } catch (Exception e) {
       Logger.getLogger(AESThroughputMeter.class.getName()).log(Level.FINE,
-          e.getMessage());
+        e.getMessage());
       e.printStackTrace();
     }
 
