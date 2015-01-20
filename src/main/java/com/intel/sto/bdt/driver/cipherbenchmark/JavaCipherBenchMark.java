@@ -1,4 +1,4 @@
-package com.intel.sto.bdt.cipherbenchmark;
+package com.intel.sto.bdt.driver.cipherbenchmark;
 
 import javax.crypto.*;
 import javax.crypto.spec.*;
