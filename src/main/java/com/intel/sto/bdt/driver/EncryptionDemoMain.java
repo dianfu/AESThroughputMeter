@@ -46,8 +46,18 @@ public class EncryptionDemoMain extends Thread{
     int executionTimes =
       Integer.valueOf(prop.getProperty("execution.times", defaultExecutionTimes));
 
+    ThroughputParameters throughputParameters = new ThroughputParameters();
+    throughputParameters.setDataSize(dataSize);
+    throughputParameters.setExecutionTimes(executionTimes);
+    throughputParameters.setKeyProviderName(openSSLCodecName);
+    boolean isFileBased = Boolean.valueOf(prop.getProperty("file.based.test.enabled", "false"));
+    if(isFileBased){
+      throughputParameters.setFileBased(true);;
+      throughputParameters.setFileName(String.valueOf(prop.getProperty("input.data.file.path")));
+    }
+
     microBenchMark =
-      new EncryptionMicroBenchMark(dataSize, executionTimes, openSSLCodecName);
+      new EncryptionMicroBenchMark(throughputParameters);
   }
 
   public boolean isCompleted() {
