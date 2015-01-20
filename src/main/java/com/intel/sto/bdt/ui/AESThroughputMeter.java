@@ -24,6 +24,10 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
+import java.util.List;
+import java.util.Random;
+import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JButton;
@@ -31,28 +35,26 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
-import javax.swing.Timer;
+import javax.swing.SwingWorker;
 import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-public class AESThroughputMeter implements ActionListener, ChangeListener {
+import com.intel.sto.bdt.driver.STOBenchMark;
 
+public class AESThroughputMeter implements ActionListener, ChangeListener {
   JFrame frame = null;
   JProgressBar progressbar;
   Tick tick;
   JLabel label;
-  Timer timer;
   JButton b;
 
-
   public AESThroughputMeter() {
-
     frame = new JFrame("进度条简单示例");
     frame.setBounds(100, 100, 400, 130);
     frame.setSize(840, 480);
     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-    frame.setResizable(false);
+    frame.setResizable(true);
     Container contentPanel = frame.getContentPane();
 
     label = new JLabel("点击运行按钮开始", JLabel.CENTER);
@@ -73,16 +75,14 @@ public class AESThroughputMeter implements ActionListener, ChangeListener {
     tick.setType(Tick.RING_180);
     tick.addChangeListener(this);
     tick.setValue("0");
-    tick.setUnit("GB/s");
+    tick.setUnit("MB/s");
 
     JPanel panel = new JPanel();
-
     b = new JButton("运行");
     b.setForeground(Color.blue);
     b.addActionListener(this);
     panel.add(b);
 
-    timer = new Timer(100, this);
     contentPanel.setLayout(new GridBagLayout());
     /**
      * int gridx, int gridy,
@@ -99,8 +99,6 @@ public class AESThroughputMeter implements ActionListener, ChangeListener {
     c.gridheight = 1;
     c.gridx = 0;
     c.gridy = 0;
-    //c.gridheight = 1;
-    //c.gridwidth = 10;
     contentPanel.add(panel, c);
 
     c.fill = GridBagConstraints.HORIZONTAL;
@@ -141,7 +139,7 @@ public class AESThroughputMeter implements ActionListener, ChangeListener {
     //c.gridheight = 1;
     //c.gridwidth = 10;
     contentPanel.add(new JPanel(), c);
-    
+
     c.fill = GridBagConstraints.HORIZONTAL;
     c.anchor = GridBagConstraints.PAGE_END;
     c.weightx = 1;
@@ -153,30 +151,15 @@ public class AESThroughputMeter implements ActionListener, ChangeListener {
     contentPanel.add(progressbar, c);
 
     // frame.pack();
-
     frame.setVisible(true);
-
   }
-
 
   @Override
   public void actionPerformed(ActionEvent e) {
     if (e.getSource() == b) {
-      timer.start();
-    }
-    if (e.getSource() == timer) {
-      int value = progressbar.getValue();
-      if (value < 100) {
-        progressbar.setValue(++value);
-        tick.setValue(String.valueOf((double)value/(double)10));
-      } else {
-        progressbar.setValue(0);
-        //timer.stop();
-        //frame.dispose();
-      }
+      sw.execute();
     }
   }
-
 
   @Override
   public void stateChanged(ChangeEvent e1) {
@@ -185,11 +168,99 @@ public class AESThroughputMeter implements ActionListener, ChangeListener {
       label.setText("目前已完成进度：" + Integer.toString(value) + "%");
       label.setForeground(Color.blue);
     }
-    /*if (e1.getSource() == tick) {
-      tick.setValue(String.valueOf(value));
-    }*/
   }
 
+  public static class Progress {
+    int speed;        // MB/s
+    int timeUsed;     //seconds
+    int percentage;   // %
+    public Progress(int speed, int timeUsed, int percentage) {
+      this.speed = speed;
+      this.timeUsed = timeUsed;
+      this.percentage = percentage;
+    }
+
+    public int getSpeed() {
+      return speed;
+    }
+    public void setSpeed(int speed) {
+      this.speed = speed;
+    }
+    public int getTimeUsed() {
+      return timeUsed;
+    }
+    public void setTimeUsed(int timeUsed) {
+      this.timeUsed = timeUsed;
+    }
+    public int getPercentage() {
+      return this.percentage;
+    }
+    public void setPercentage(int percentage) {
+      this.percentage = percentage;
+    }
+  }
+
+  public void updateProgess(Progress latest) {
+    if (latest != null) {
+      progressbar.setValue(latest.getPercentage());
+      tick.setValue(String.valueOf(latest.getSpeed()));
+    }
+  }
+
+  final SwingWorker<Progress, Progress> sw = new SwingWorker<Progress, Progress>() {
+    int speed = 0;
+    int timeUsed = 0;
+    int percentage = 0;
+    STOBenchMark driver = new STOBenchMark();
+
+    private void startDriver() {
+      new Thread(new Runnable() {
+        public void run() {
+            try {
+              driver.start();
+            } catch (IOException e) {
+              e.printStackTrace();
+            }
+        }
+      }).start();
+    }
+
+    @Override
+    protected Progress doInBackground() throws Exception {
+      startDriver();
+      if (!this.isCancelled()) {
+        for (int i = 1; i <= 100; ++i) {
+          speed = new Random().nextInt(100);
+          timeUsed = timeUsed++;
+          percentage += 1;
+          publish(new Progress(speed, timeUsed, percentage));
+          setProgress(i);//
+          Thread.sleep(100);
+        }
+      }
+      return new Progress(speed, timeUsed, 100);
+    }
+
+    @Override
+    protected void process(List<Progress> chunks) {
+      if (chunks != null && !chunks.isEmpty()) {
+        Progress latest = chunks.get(chunks.size() - 1);
+        updateProgess(latest);
+      }
+    }
+
+    @Override
+    protected void done() {
+      if (this != null && !this.isDone()) {
+        try {
+          Progress result = get();
+          updateProgess(result);
+        } catch (InterruptedException ex) {
+        } catch (ExecutionException ex) {
+        }
+      }
+    }
+  };
 
   public static void main(String[] args) {
     try {

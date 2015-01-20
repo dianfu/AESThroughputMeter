@@ -11,13 +11,15 @@ import com.intel.sto.bdt.driver.cipherbenchmark.JavaCipherBenchMark;
  * Created by root on 12/4/14.
  */
 public class STOBenchMark {
-  static String defaultConfigPath = "./config.properties";
+  static String defaultConfigPath = "src/main/resources/config.properties";
   static String jceAesCtrCryptoCodec = "org.apache.hadoop.crypto.JceAesCtrCryptoCodec";
   static String openSSLAesCtrCryptoCodec = "org.apache.hadoop.crypto.OpensslAesCtrCryptoCodec";
   static String defaultExecutionTimes = "123456";
   static String defaultDataSize = "524288";
 
-  public static void main(String[] args) throws IOException {
+  public STOBenchMark() {}
+
+  public void start() throws IOException {
     Properties prop = new Properties();
     String propFileName = "config.properties";
 
@@ -72,5 +74,9 @@ public class STOBenchMark {
       benchMark.getBenchMarkData(executionTimes);
     }
     System.out.println("end test suite");
+  }
+
+  public static void main(String[] args) throws IOException {
+    new STOBenchMark().start();
   }
 }
