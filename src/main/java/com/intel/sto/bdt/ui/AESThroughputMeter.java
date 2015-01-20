@@ -24,7 +24,6 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.IOException;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
@@ -172,76 +171,71 @@ public class AESThroughputMeter implements ActionListener, ChangeListener {
   }
 
   public static class Progress {
-    int speed;        // MB/s
-    int timeUsed;     //seconds
-    int percentage;   // %
+    double averageThroughput;        // MB/s
+    long executedTime;     //seconds
+    double percentage;   // %
 
-    public Progress(int speed, int timeUsed, int percentage) {
-      this.speed = speed;
-      this.timeUsed = timeUsed;
+    public Progress(double speed, long timeUsed, double percentage) {
+      this.averageThroughput = speed;
+      this.executedTime = timeUsed;
       this.percentage = percentage;
     }
 
-    public int getSpeed() {
-      return speed;
+    public double getAverageThroughput() {
+      return averageThroughput;
     }
 
-    public void setSpeed(int speed) {
-      this.speed = speed;
+    public void setAverageThroughput(double averageThroughput) {
+      this.averageThroughput = averageThroughput;
     }
 
-    public int getTimeUsed() {
-      return timeUsed;
+    public long getExecutedTime() {
+      return executedTime;
     }
 
-    public void setTimeUsed(int timeUsed) {
-      this.timeUsed = timeUsed;
+    public void setExecutedTime(long executedTime) {
+      this.executedTime = executedTime;
     }
 
-    public int getPercentage() {
+    public double getPercentage() {
       return this.percentage;
     }
 
-    public void setPercentage(int percentage) {
+    public void setPercentage(double percentage) {
       this.percentage = percentage;
     }
   }
 
-  public void updateProgess(Progress latest) {
+  private void updateProgess(Progress latest) {
     if (latest != null) {
-      progressbar.setValue(latest.getPercentage());
-      tick.setValue(String.valueOf(latest.getSpeed()));
+      progressbar.setValue((int)(latest.getPercentage() * 100));
+      tick.setValue(String.valueOf(latest.getAverageThroughput()));
     }
   }
 
   final SwingWorker<Progress, Progress> sw = new SwingWorker<Progress, Progress>() {
-    int speed = 0;
-    int timeUsed = 0;
-    int percentage = 0;
+    double averageThroughput = 0;
+    long executedTime = 0;
+    double percentage = 0;
     EncryptionDemoMain driver = new EncryptionDemoMain();
 
     private void startDriver() {
-      new Thread(new Runnable() {
-        public void run() {
-          driver.start();
-        }
-      }).start();
+      driver.start();
     }
 
     @Override
     protected Progress doInBackground() throws Exception {
       startDriver();
-      if (!this.isCancelled()) {
-        for (int i = 1; i <= 100; ++i) {
-          speed = new Random().nextInt(100);
-          timeUsed = timeUsed++;
-          percentage += 1;
-          publish(new Progress(speed, timeUsed, percentage));
-          setProgress(i);//
-          Thread.sleep(100);
-        }
+
+      while (!driver.isCompleted()) {
+        averageThroughput = driver.getAverageThroughput();
+        executedTime = driver.getExecutedTime();
+        percentage = driver.getPercentage();
+        publish(new Progress(averageThroughput, executedTime, percentage));
+      //  setProgress(i);//
+        Thread.sleep(100);
       }
-      return new Progress(speed, timeUsed, 100);
+      return new Progress(averageThroughput, executedTime, 1);
     }
 
     @Override
@@ -254,14 +248,13 @@ public class AESThroughputMeter implements ActionListener, ChangeListener {
 
     @Override
     protected void done() {
-      if (this != null && !this.isDone()) {
-        try {
-          Progress result = get();
-          updateProgess(result);
-        } catch (InterruptedException ex) {
-        } catch (ExecutionException ex) {
-        }
+      Progress result = null;
+      try {
+        result = get();
+      } catch (Exception e) {
+        e.printStackTrace();
       }
+      updateProgess(result);
     }
   };
 
