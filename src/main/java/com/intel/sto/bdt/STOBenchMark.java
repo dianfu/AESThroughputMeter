@@ -1,7 +1,11 @@
-import cipherBenmarker.*;
+package com.intel.sto.bdt;
 
 import java.io.*;
 import java.util.*;
+
+import com.intel.sto.bdt.cipherbenchmark.CipherBenchMark;
+import com.intel.sto.bdt.cipherbenchmark.HadoopCipherBenchMark;
+import com.intel.sto.bdt.cipherbenchmark.JavaCipherBenchMark;
 
 /**
  * Created by root on 12/4/14.

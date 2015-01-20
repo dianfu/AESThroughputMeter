@@ -1,4 +1,4 @@
-package cipherBenmarker;
+package com.intel.sto.bdt.cipherbenchmark;
 
 import org.apache.hadoop.conf.*;
 import org.apache.hadoop.crypto.*;

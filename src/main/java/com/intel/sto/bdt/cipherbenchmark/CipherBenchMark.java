@@ -1,4 +1,4 @@
-package cipherBenmarker;
+package com.intel.sto.bdt.cipherbenchmark;
 
 import java.util.*;
 
