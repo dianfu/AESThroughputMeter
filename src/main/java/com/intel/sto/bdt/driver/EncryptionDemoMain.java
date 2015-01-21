@@ -7,8 +7,9 @@ import java.util.*;
  * Created by root on 1/19/15.
  */
 public class EncryptionDemoMain extends Thread {
-  static String defaultPicPath = EncryptionDemoMain.class.getClassLoader().getResource(
-    "test_picture.jpg").getPath();
+  //static String defaultPicPath = EncryptionDemoMain.class.getClassLoader().getResource(
+  //  "test_picture.jpg").getPath();
+  static String defaultPicPath = "/root/test_picture.jpg";
 
   final static String defaultDataSize = "52428800";
   final static String defaultExecutionTimes = "100000";

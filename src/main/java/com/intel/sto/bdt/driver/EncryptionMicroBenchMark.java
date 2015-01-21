@@ -42,18 +42,32 @@ public class EncryptionMicroBenchMark {
   public byte[] extractBytesFromPic(String ImageName){
     // open image
     File imgPath = new File(ImageName);
-    BufferedImage bufferedImage = null;
+
+    
     try {
-      bufferedImage = ImageIO.read(imgPath);
+      FileInputStream is = new FileInputStream(imgPath);
+      byte[] picData = new byte[(int)imgPath.length()];
+      readFully(is, picData, 0, picData.length);
+      parameters.setDataSize(picData.length);
+      return picData;
     } catch (IOException e) {
+      // TODO Auto-generated catch block
       e.printStackTrace();
     }
+    return null;
+  }
 
-    // get DataBufferBytes from Raster
-    WritableRaster raster = bufferedImage.getRaster();
-    DataBufferByte data = (DataBufferByte) raster.getDataBuffer();
-
-    return data.getData();
+  public static void readFully(InputStream in, byte buf[],
+      int off, int len) throws IOException {
+    int toRead = len;
+    while (toRead > 0) {
+      int ret = in.read(buf, off, toRead);
+      if (ret < 0) {
+        throw new IOException( "Premature EOF from inputStream");
+      }
+      toRead -= ret;
+      off += ret;
+    }
   }
 
   private CryptoCodec initialCryptoCodec() {
@@ -83,24 +97,34 @@ public class EncryptionMicroBenchMark {
   }
 
   public long getExecutedTime() {
+    end = Calendar.getInstance(TimeZone.getTimeZone("UTC")).getTimeInMillis();
     return end - begin;
   }
 
   public double getAverageThroughput() {
+    end = Calendar.getInstance(TimeZone.getTimeZone("UTC")).getTimeInMillis();
     return 1000.0 * currentTime * parameters.getDataSize() / ((end - begin) * 1024.0 * 1024.0);
   }
 
   public void encryptionThroughputTest() {
     try {
+      
       byte[] data = prepareData();
+      System.out.println("data size: " + parameters.getDataSize());
+      System.out.println("file name: " + parameters.getFileName());
+      System.out.println("execute times: " + parameters.getExecutionTimes());
       ByteArrayInputStream inputStream = new ByteArrayInputStream(prepareData());
       CryptoInputStream cryptoInputStream = initialCryptoInputStream(inputStream);
+      
+      for (int i = 0; i < 1000; i++) {
+        cryptoInputStream.read(data, 0, parameters.getDataSize());
+        inputStream.reset();
+      }
+      
       begin = Calendar.getInstance(TimeZone.getTimeZone("UTC")).getTimeInMillis();
-
       for (currentTime = 0; currentTime < parameters.getExecutionTimes(); currentTime++) {
         cryptoInputStream.read(data, 0, parameters.getDataSize());
         inputStream.reset();
-        end = Calendar.getInstance(TimeZone.getTimeZone("UTC")).getTimeInMillis();
       }
       System.out.println("Complete !!");
     } catch (FileNotFoundException e) {

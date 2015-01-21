@@ -38,6 +38,7 @@ import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JTextField;
 import javax.swing.SwingWorker;
+import javax.swing.Timer;
 import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -48,51 +49,84 @@ public class AESThroughputMeter2 implements ActionListener, ChangeListener {
   JFrame frame = null;
   JButton startButton;
   JLabel timeUsedValue;
+  JLabel throughputValue;
 
   public AESThroughputMeter2() {
-    frame = new JFrame("进度条简单示例");
+    frame = new JFrame("");
     frame.setBounds(100, 100, 840, 480);
     frame.setSize(840, 480);
     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     frame.setResizable(false);
+    //frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+    frame.setUndecorated(true);
+
     Container pane = frame.getContentPane();
     pane.setLayout(null);
 //    pane.setBackground(new Color(0, 0, 0));
 
-    // add description
+    // left top infomration picture
     JPanel panelDesc = new JPanel(null);
     panelDesc.setBounds(0, 0, 420, 240);
-    JLabel pictureLabel = new JLabel();
-    pictureLabel.setFont(pictureLabel.getFont().deriveFont(Font.ITALIC));
-    updatePicture(pictureLabel, "test.jpg");
-    pictureLabel.setBounds(0, 0, 210, 120);
-    pane.add(pictureLabel);
+    JLabel infoLabel = new JLabel();
+    infoLabel.setFont(infoLabel.getFont().deriveFont(Font.ITALIC));
+    updatePicture(infoLabel, "info.jpg");
+    infoLabel.setBounds(0, 0, 210, 120);
+    panelDesc.add(infoLabel);
     panelDesc.setBackground(new Color(0, 0, 0));
+    pane.add(panelDesc);
 
-    // add time
-    JPanel panelRun = new JPanel(null);
-    panelRun.setBounds(0, 240, 420, 240);
-    JLabel timeUsed = new JLabel();
-    timeUsed.setText("time used: ");
-    timeUsed.setBounds(50, 30, 100, 20);
-    panelRun.add(timeUsed);
+    // right top picture
+    JPanel panelRight = new JPanel(null);
+    panelRight.setBounds(420, 0, 420, 240);
+    JLabel picRightLabel = new JLabel();
+    picRightLabel.setFont(picRightLabel.getFont().deriveFont(Font.ITALIC));
+    updatePicture(picRightLabel, "info.jpg");
+    picRightLabel.setBounds(420, 0, 210, 120);
+    panelRight.add(picRightLabel);
+    panelRight.setBackground(new Color(0, 0, 0));
+    pane.add(panelRight);
+
+    // time used and throughput
+    JPanel panelRunInfo = new JPanel(null);
+    panelRunInfo.setBounds(0, 240, 840, 240);
+    JLabel timeUsedLabel = new JLabel();
+    timeUsedLabel.setFont(timeUsedLabel.getFont().deriveFont(20f));
+    timeUsedLabel.setText("time used: ");
+    timeUsedLabel.setBounds(150, 70, 150, 20);
+    panelRunInfo.add(timeUsedLabel);
 
     timeUsedValue = new JLabel("0");
-    timeUsedValue.setBounds(150, 30, 50, 20);
-    panelRun.add(timeUsedValue);
+    timeUsedValue.setBounds(370, 70, 100, 20);
+    timeUsedValue.setFont(timeUsedValue.getFont().deriveFont(20f));
+    panelRunInfo.add(timeUsedValue);
     
     JLabel timeUnit = new JLabel("s");
-    timeUnit.setBounds(200, 30, 100, 20);
-    panelRun.add(timeUnit);
+    timeUnit.setFont(timeUnit.getFont().deriveFont(20f));
+    timeUnit.setBounds(500, 70, 100, 20);
+    panelRunInfo.add(timeUnit);
 
-    JButton startButton = new JButton("Start");
-    startButton.setBounds(50, 100, 100, 20);
-    panelRun.add(startButton);
-    startButton.addActionListener(this);
-    pane.add(panelRun);
-    panelRun.setBackground(new Color(0, 0, 0));
+    JLabel throughputLabel = new JLabel();
+    throughputLabel.setText("throughput: ");
+    throughputLabel.setFont(throughputLabel.getFont().deriveFont(20f));
+    throughputLabel.setBounds(150, 120, 150, 20);
+    panelRunInfo.add(throughputLabel);
+
+    throughputValue = new JLabel("0");
+    throughputValue.setFont(throughputValue.getFont().deriveFont(20f));
+    throughputValue.setBounds(370, 120, 100, 20);
+    panelRunInfo.add(throughputValue);
+    
+    JLabel throughputUnit = new JLabel("MB/s");
+    throughputUnit.setFont(throughputUnit.getFont().deriveFont(20f));
+    throughputUnit.setBounds(500, 120, 100, 20);
+    panelRunInfo.add(throughputUnit);
+
+    pane.add(panelRunInfo);
+//    panelRunInfo.setBackground(new Color(0, 0, 0));
     // frame.pack();
     frame.setVisible(true);
+
+    new Timer(2000, this).start();
   }
 
   @Override
@@ -102,7 +136,7 @@ public class AESThroughputMeter2 implements ActionListener, ChangeListener {
 
   protected void updatePicture(JLabel pictureLabel, String filename) {
     //Get the icon corresponding to the image.
-    ImageIcon icon = createImageIcon("images/" + filename);
+    ImageIcon icon = createImageIcon(filename);
     pictureLabel.setIcon(icon);
     
     if (icon == null) {
@@ -114,7 +148,7 @@ public class AESThroughputMeter2 implements ActionListener, ChangeListener {
 
   /** Returns an ImageIcon, or null if the path was invalid. */
   protected static ImageIcon createImageIcon(String path) {
-    java.net.URL imgURL = AESThroughputMeter2.class.getResource(path);
+    java.net.URL imgURL = AESThroughputMeter2.class.getClassLoader().getResource(path);
     if (imgURL != null) {
         return new ImageIcon(imgURL);
     } else {
@@ -172,6 +206,7 @@ public class AESThroughputMeter2 implements ActionListener, ChangeListener {
     if (latest != null) {
 //      progressbar.setValue((int)(latest.getPercentage() * 100));
       timeUsedValue.setText(String.valueOf(latest.getExecutedTime() / 1000));
+      throughputValue.setText(String.valueOf(latest.getAverageThroughput()));
     }
   }
 
@@ -187,7 +222,6 @@ public class AESThroughputMeter2 implements ActionListener, ChangeListener {
 
     @Override
     protected Progress doInBackground() throws Exception {
-      System.out.println("2222");
       startDriver();
 
       while (!driver.isCompleted()) {
