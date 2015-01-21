@@ -18,156 +18,118 @@
 package com.intel.sto.bdt.ui;
 
 import java.awt.Color;
+import java.awt.ComponentOrientation;
 import java.awt.Container;
-import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
-import java.util.Random;
-import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
+import javax.swing.JTextField;
 import javax.swing.SwingWorker;
 import javax.swing.UIManager;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import com.intel.sto.bdt.driver.*;
+import com.intel.sto.bdt.driver.EncryptionDemoMain;
 
-public class AESThroughputMeter implements ActionListener, ChangeListener {
+public class AESThroughputMeter2 implements ActionListener, ChangeListener {
   JFrame frame = null;
-  JProgressBar progressbar;
-  Tick tick;
-  JLabel label;
-  JButton b;
+  JButton startButton;
+  JLabel timeUsedValue;
 
-  public AESThroughputMeter() {
+  public AESThroughputMeter2() {
     frame = new JFrame("进度条简单示例");
-    frame.setBounds(100, 100, 400, 130);
+    frame.setBounds(100, 100, 840, 480);
     frame.setSize(840, 480);
     frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-    frame.setResizable(true);
-    Container contentPanel = frame.getContentPane();
+    frame.setResizable(false);
+    Container pane = frame.getContentPane();
+    pane.setLayout(null);
+//    pane.setBackground(new Color(0, 0, 0));
 
-    label = new JLabel("点击运行按钮开始", JLabel.CENTER);
+    // add description
+    JPanel panelDesc = new JPanel(null);
+    panelDesc.setBounds(0, 0, 420, 240);
+    JLabel pictureLabel = new JLabel();
+    pictureLabel.setFont(pictureLabel.getFont().deriveFont(Font.ITALIC));
+    updatePicture(pictureLabel, "test.jpg");
+    pictureLabel.setBounds(0, 0, 210, 120);
+    pane.add(pictureLabel);
+    panelDesc.setBackground(new Color(0, 0, 0));
 
-    progressbar = new JProgressBar();
-    progressbar.setOrientation(JProgressBar.HORIZONTAL);
-    progressbar.setMinimum(0);
-    progressbar.setMaximum(100);
-    progressbar.setValue(0);
-    progressbar.setStringPainted(true);
-    progressbar.addChangeListener(this);
-    progressbar.setPreferredSize(new Dimension(300, 20));
-    progressbar.setBorderPainted(true);
-    progressbar.setBackground(Color.pink);
+    // add time
+    JPanel panelRun = new JPanel(null);
+    panelRun.setBounds(0, 240, 420, 240);
+    JLabel timeUsed = new JLabel();
+    timeUsed.setText("time used: ");
+    timeUsed.setBounds(50, 30, 100, 20);
+    panelRun.add(timeUsed);
 
-    tick = new Tick();
-    tick.setForeground(Color.BLUE);
-    tick.setType(Tick.RING_180);
-    tick.addChangeListener(this);
-    tick.setValue("0");
-    tick.setUnit("MB/s");
+    timeUsedValue = new JLabel("0");
+    timeUsedValue.setBounds(150, 30, 50, 20);
+    panelRun.add(timeUsedValue);
+    
+    JLabel timeUnit = new JLabel("s");
+    timeUnit.setBounds(200, 30, 100, 20);
+    panelRun.add(timeUnit);
 
-    JPanel panel = new JPanel();
-    b = new JButton("运行");
-    b.setForeground(Color.blue);
-    b.addActionListener(this);
-    panel.add(b);
-
-    contentPanel.setLayout(new GridBagLayout());
-    /**
-     * int gridx, int gridy,
-     * int gridwidth, int gridheight,
-     * double weightx, double weighty,
-     * int anchor, int fill,
-     * Insets insets, int ipadx, int ipady
-     */
-    //GridBagConstraints c = new GridBagConstraints(0,0,10,8,(double)0,(double)0,10,0,new Insets
-    // (0,0,0,0),1,1);
-    GridBagConstraints c = new GridBagConstraints();
-    c.fill = GridBagConstraints.HORIZONTAL;
-    c.weightx = 0.5;
-    c.gridwidth = 4;
-    c.gridheight = 1;
-    c.gridx = 0;
-    c.gridy = 0;
-    contentPanel.add(panel, c);
-
-    c.fill = GridBagConstraints.HORIZONTAL;
-    c.gridwidth = 4;
-    c.gridheight = 2;
-    c.gridx = 0;
-    c.gridy = 1;
-    //c.gridheight = 1;
-    //c.gridwidth = 10;
-    contentPanel.add(new JPanel(), c);
-
-    c.fill = GridBagConstraints.VERTICAL;
-    //c.ipady = 40;
-    //c.weightx = 0.0;
-    c.gridwidth = 2;
-    c.gridheight = 4;
-    c.gridx = 0;
-    c.gridy = 3;
-    //c.gridheight = 2;
-    //c.gridwidth = 5;
-    contentPanel.add(tick, c);
-    c.fill = GridBagConstraints.VERTICAL;
-    //c.ipady = 40;
-    c.gridwidth = 2;
-    c.gridheight = 4;
-    //c.weightx = 0.5;
-    //c.gridheight = 2;
-    //c.gridwidth = 5;
-    c.gridx = 2;
-    c.gridy = 3;
-    contentPanel.add(label, c);
-
-    c.fill = GridBagConstraints.NONE;
-    c.gridwidth = 4;
-    c.gridheight = 2;
-    c.gridx = 0;
-    c.gridy = 8;
-    //c.gridheight = 1;
-    //c.gridwidth = 10;
-    contentPanel.add(new JPanel(), c);
-
-    c.fill = GridBagConstraints.HORIZONTAL;
-    c.anchor = GridBagConstraints.PAGE_END;
-    c.weightx = 1;
-    c.gridwidth = 4;
-    c.gridheight = 3;
-    //c.gridwidth = 3;
-    c.gridx = 0;
-    c.gridy = 10;
-    contentPanel.add(progressbar, c);
-
+    JButton startButton = new JButton("Start");
+    startButton.setBounds(50, 100, 100, 20);
+    panelRun.add(startButton);
+    startButton.addActionListener(this);
+    pane.add(panelRun);
+    panelRun.setBackground(new Color(0, 0, 0));
     // frame.pack();
     frame.setVisible(true);
   }
 
   @Override
   public void actionPerformed(ActionEvent e) {
-    if (e.getSource() == b) {
-      sw.execute();
+    sw.execute();
+  }
+
+  protected void updatePicture(JLabel pictureLabel, String filename) {
+    //Get the icon corresponding to the image.
+    ImageIcon icon = createImageIcon("images/" + filename);
+    pictureLabel.setIcon(icon);
+    
+    if (icon == null) {
+        pictureLabel.setText("Missing Image");
+    } else {
+        pictureLabel.setText(null);
+    }
+  }
+
+  /** Returns an ImageIcon, or null if the path was invalid. */
+  protected static ImageIcon createImageIcon(String path) {
+    java.net.URL imgURL = AESThroughputMeter2.class.getResource(path);
+    if (imgURL != null) {
+        return new ImageIcon(imgURL);
+    } else {
+        System.err.println("Couldn't find file: " + path);
+        return null;
     }
   }
 
   @Override
   public void stateChanged(ChangeEvent e1) {
-    int value = progressbar.getValue();
-    if (e1.getSource() == progressbar) {
-      label.setText("目前已完成进度：" + Integer.toString(value) + "%");
-      label.setForeground(Color.blue);
-    }
+    //int value = progressbar.getValue();/*
+   // if (e1.getSource() == progressbar) {
+      //runLabel.setText("目前已完成进度：" + Integer.toString(value) + "%");
+      //runLabel.setForeground(Color.blue);
+    //}
   }
 
   public static class Progress {
@@ -208,8 +170,8 @@ public class AESThroughputMeter implements ActionListener, ChangeListener {
 
   private void updateProgess(Progress latest) {
     if (latest != null) {
-      progressbar.setValue((int)(latest.getPercentage() * 100));
-      tick.setValue(String.valueOf(latest.getAverageThroughput()));
+//      progressbar.setValue((int)(latest.getPercentage() * 100));
+      timeUsedValue.setText(String.valueOf(latest.getExecutedTime() / 1000));
     }
   }
 
@@ -225,6 +187,7 @@ public class AESThroughputMeter implements ActionListener, ChangeListener {
 
     @Override
     protected Progress doInBackground() throws Exception {
+      System.out.println("2222");
       startDriver();
 
       while (!driver.isCompleted()) {
@@ -262,11 +225,11 @@ public class AESThroughputMeter implements ActionListener, ChangeListener {
     try {
       UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
     } catch (Exception e) {
-      Logger.getLogger(AESThroughputMeter.class.getName()).log(Level.FINE,
+      Logger.getLogger(AESThroughputMeter2.class.getName()).log(Level.FINE,
         e.getMessage());
       e.printStackTrace();
     }
 
-    new AESThroughputMeter();
+    new AESThroughputMeter2();
   }
 }
