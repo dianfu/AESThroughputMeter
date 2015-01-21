@@ -6,15 +6,17 @@ import java.util.*;
 /**
  * Created by root on 1/19/15.
  */
-public class EncryptionDemoMain extends Thread{
-  static String defaultConfigPath = "./src/main/resources/config.properties";
+public class EncryptionDemoMain extends Thread {
+  static String defaultPicPath = EncryptionDemoMain.class.getClassLoader().getResource(
+    "test_picture.jpg").getPath();
+
   final static String defaultDataSize = "52428800";
   final static String defaultExecutionTimes = "100000";
   final static String openSSLCodecName = "org.apache.hadoop.crypto.OpensslAesCtrCryptoCodec";
 
   private EncryptionMicroBenchMark microBenchMark;
 
-  public static void main(String[]args) throws InterruptedException, IOException{
+  public static void main(String[] args) throws InterruptedException, IOException {
     EncryptionDemoMain e = new EncryptionDemoMain();
     e.start();
   }
@@ -23,7 +25,7 @@ public class EncryptionDemoMain extends Thread{
     Properties prop = new Properties();
     String propFileName = "config.properties";
 
-    File configFile = new File(defaultConfigPath);
+    File configFile = new File(propFileName);
     InputStream inputStream = null;
     if (configFile.exists()) {
       try {
@@ -46,8 +48,25 @@ public class EncryptionDemoMain extends Thread{
     int executionTimes =
       Integer.valueOf(prop.getProperty("execution.times", defaultExecutionTimes));
 
+    ThroughputParameters throughputParameters = new ThroughputParameters();
+    throughputParameters.setDataSize(dataSize);
+    throughputParameters.setExecutionTimes(executionTimes);
+    throughputParameters.setKeyProviderName(openSSLCodecName);
+    boolean isFileBased = Boolean.valueOf(prop.getProperty("file.based.test.enabled", "false"));
+    if (isFileBased) {
+      throughputParameters.setFileBased(true);
+      String picPath = prop.getProperty("input.data.file.path");
+      File pic = new File(picPath);
+      if (pic.exists()) {
+        throughputParameters.setFileName(picPath);
+      } else {
+        System.out.println("can not find the picture file under the current path");
+        throughputParameters.setFileName(defaultPicPath);
+      }
+    }
+
     microBenchMark =
-      new EncryptionMicroBenchMark(dataSize, executionTimes, openSSLCodecName);
+      new EncryptionMicroBenchMark(throughputParameters);
   }
 
   public boolean isCompleted() {
@@ -67,7 +86,7 @@ public class EncryptionDemoMain extends Thread{
   }
 
   @Override
-  public void run(){
+  public void run() {
     microBenchMark.encryptionThroughputTest();
 
     System.out.println("average throughput is " + microBenchMark.getAverageThroughput());
