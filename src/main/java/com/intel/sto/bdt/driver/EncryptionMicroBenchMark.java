@@ -15,10 +15,11 @@ public class EncryptionMicroBenchMark {
   private int currentTime = 0;
   ThroughputParameters parameters;
   private long begin = 0;
-
   private long end = 0;
 
   private boolean isCompleted = false;
+
+  private boolean isStarted = false;
 
   public EncryptionMicroBenchMark(ThroughputParameters parameters) {
     this.parameters = parameters;
@@ -80,7 +81,6 @@ public class EncryptionMicroBenchMark {
 
   public CryptoInputStream initialCryptoInputStream(InputStream inputStream) throws IOException {
     CryptoCodec codec = initialCryptoCodec();
-    Random r = new Random();
     byte[] iv = new byte[16];
     byte[] key = new byte[16];
     CryptoInputStream cryptoInputStream =
@@ -93,17 +93,29 @@ public class EncryptionMicroBenchMark {
   }
 
   public double getPercentage() {
-    return ((double) currentTime / (double) parameters.getExecutionTimes());
+    if (isStarted) {
+      return ((double) currentTime / (double) parameters.getExecutionTimes());
+    } else {
+      return 0;
+    }
   }
 
   public long getExecutedTime() {
-    end = Calendar.getInstance(TimeZone.getTimeZone("UTC")).getTimeInMillis();
-    return end - begin;
+    if (isStarted) {
+      end = Calendar.getInstance(TimeZone.getTimeZone("UTC")).getTimeInMillis();
+      return end - begin;
+    } else {
+      return 0;
+    }
   }
 
   public double getAverageThroughput() {
-    end = Calendar.getInstance(TimeZone.getTimeZone("UTC")).getTimeInMillis();
-    return 1000.0 * currentTime * parameters.getDataSize() / ((end - begin) * 1024.0 * 1024.0);
+    if (isStarted) {
+      end = Calendar.getInstance(TimeZone.getTimeZone("UTC")).getTimeInMillis();
+      return 1000.0 * currentTime * parameters.getDataSize() / ((end - begin) * 1024.0 * 1024.0);
+    } else {
+      return 0.00;
+    }
   }
 
   public void encryptionThroughputTest() {
@@ -115,13 +127,14 @@ public class EncryptionMicroBenchMark {
       System.out.println("execute times: " + parameters.getExecutionTimes());
       ByteArrayInputStream inputStream = new ByteArrayInputStream(prepareData());
       CryptoInputStream cryptoInputStream = initialCryptoInputStream(inputStream);
-      
+
       for (int i = 0; i < 1000; i++) {
         cryptoInputStream.read(data, 0, parameters.getDataSize());
         inputStream.reset();
       }
-      
+
       begin = Calendar.getInstance(TimeZone.getTimeZone("UTC")).getTimeInMillis();
+      isStarted = true;
       for (currentTime = 0; currentTime < parameters.getExecutionTimes(); currentTime++) {
         cryptoInputStream.read(data, 0, parameters.getDataSize());
         inputStream.reset();
