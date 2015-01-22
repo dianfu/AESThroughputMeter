@@ -1,73 +1,40 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.intel.sto.bdt.driver;
 
-import java.io.*;
-import java.util.*;
+import java.io.IOException;
 
-/**
- * Created by root on 1/19/15.
- */
+import com.intel.sto.bdt.driver.conf.EncryptParameters;
+import com.intel.sto.bdt.driver.conf.ThroughputConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class EncryptionDemoMain extends Thread {
-  //static String defaultPicPath = EncryptionDemoMain.class.getClassLoader().getResource(
-  //  "test_picture.jpg").getPath();
-  static String defaultPicPath = "/root/test_picture.jpg";
 
-  final static String defaultDataSize = "52428800";
-  final static String defaultExecutionTimes = "100000";
-  final static String openSSLCodecName = "org.apache.hadoop.crypto.OpensslAesCtrCryptoCodec";
-
+  private static Logger LOG = LoggerFactory.getLogger(EncryptionDemoMain.class);
+  
   private EncryptionMicroBenchMark microBenchMark;
-
-  public static void main(String[] args) throws InterruptedException, IOException {
-    EncryptionDemoMain e = new EncryptionDemoMain();
-    e.start();
-  }
-
-  public EncryptionDemoMain() {
-    Properties prop = new Properties();
-    String propFileName = "config.properties";
-
-    File configFile = new File(propFileName);
-    InputStream inputStream = null;
-    if (configFile.exists()) {
-      try {
-        inputStream = new FileInputStream(configFile);
-      } catch (FileNotFoundException e) {
-        e.printStackTrace();
-      }
-    } else {
-      System.out.println("can not find the configuration file under the current path");
-      inputStream = EncryptionDemoMain.class.getClassLoader().getResourceAsStream(propFileName);
-    }
-
-    try {
-      prop.load(inputStream);
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-
-    int dataSize = Integer.valueOf(prop.getProperty("test.data.size", defaultDataSize));
-    int executionTimes =
-      Integer.valueOf(prop.getProperty("execution.times", defaultExecutionTimes));
-
-    ThroughputParameters throughputParameters = new ThroughputParameters();
-    throughputParameters.setDataSize(dataSize);
-    throughputParameters.setExecutionTimes(executionTimes);
-    throughputParameters.setKeyProviderName(openSSLCodecName);
-    boolean isFileBased = Boolean.valueOf(prop.getProperty("file.based.test.enabled", "false"));
-    if (isFileBased) {
-      throughputParameters.setFileBased(true);
-      String picPath = prop.getProperty("input.data.file.path");
-      File pic = new File(picPath);
-      if (pic.exists()) {
-        throughputParameters.setFileName(picPath);
-      } else {
-        System.out.println("can not find the picture file under the current path");
-        throughputParameters.setFileName(defaultPicPath);
-      }
-    }
-
-    microBenchMark =
-      new EncryptionMicroBenchMark(throughputParameters);
+  private EncryptParameters parameters;
+  
+  public EncryptionDemoMain() throws IOException {
+    parameters = ThroughputConfig.getInstance().getConfig();
+    LOG.info(parameters.toString());
+    microBenchMark = new EncryptionMicroBenchMark(parameters);
   }
 
   public boolean isCompleted() {
@@ -89,7 +56,11 @@ public class EncryptionDemoMain extends Thread {
   @Override
   public void run() {
     microBenchMark.encryptionThroughputTest();
-
-    System.out.println("average throughput is " + microBenchMark.getAverageThroughput());
+    LOG.info("average throughput is " + microBenchMark.getAverageThroughput());
+  }
+  
+  public static void main(String[] args) throws InterruptedException, IOException {
+    EncryptionDemoMain e = new EncryptionDemoMain();
+    e.start();
   }
 }

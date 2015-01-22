@@ -18,25 +18,17 @@
 package com.intel.sto.bdt.ui;
 
 import java.awt.Color;
-import java.awt.ComponentOrientation;
 import java.awt.Container;
 import java.awt.Font;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JProgressBar;
-import javax.swing.JTextField;
 import javax.swing.SwingWorker;
 import javax.swing.Timer;
 import javax.swing.UIManager;
@@ -44,8 +36,12 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import com.intel.sto.bdt.driver.EncryptionDemoMain;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AESThroughputMeter2 implements ActionListener, ChangeListener {
+
+  private static Logger LOG = LoggerFactory.getLogger(AESThroughputMeter2.class);
   JFrame frame = null;
   JButton startButton;
   JLabel timeUsedValue;
@@ -214,9 +210,10 @@ public class AESThroughputMeter2 implements ActionListener, ChangeListener {
     double averageThroughput = 0;
     long executedTime = 0;
     double percentage = 0;
-    EncryptionDemoMain driver = new EncryptionDemoMain();
+    EncryptionDemoMain driver;
 
-    private void startDriver() {
+    private void startDriver() throws IOException {
+      driver = new EncryptionDemoMain();
       driver.start();
     }
 
@@ -257,11 +254,10 @@ public class AESThroughputMeter2 implements ActionListener, ChangeListener {
 
   public static void main(String[] args) {
     try {
+      LOG.info("test");
       UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
     } catch (Exception e) {
-      Logger.getLogger(AESThroughputMeter2.class.getName()).log(Level.FINE,
-        e.getMessage());
-      e.printStackTrace();
+      LOG.error(e.getMessage(),e);
     }
 
     new AESThroughputMeter2();

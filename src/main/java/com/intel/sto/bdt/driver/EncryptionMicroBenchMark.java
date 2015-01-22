@@ -1,73 +1,55 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.intel.sto.bdt.driver;
 
-import org.apache.hadoop.conf.*;
-import org.apache.hadoop.crypto.*;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Calendar;
+import java.util.Random;
+import java.util.TimeZone;
 
-import javax.imageio.*;
-import java.awt.image.*;
-import java.io.*;
-import java.util.*;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.crypto.CipherSuite;
+import org.apache.hadoop.crypto.CryptoCodec;
+import org.apache.hadoop.crypto.CryptoInputStream;
 
-/**
- * Created by root on 1/19/15.
- */
+import com.intel.sto.bdt.driver.conf.EncryptParameters;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class EncryptionMicroBenchMark {
+
+  private static Logger LOG = LoggerFactory.getLogger(EncryptionDemoMain.class);
   private int currentTime = 0;
-  ThroughputParameters parameters;
+  EncryptParameters parameters;
   private long begin = 0;
 
   private long end = 0;
 
   private boolean isCompleted = false;
 
-  public EncryptionMicroBenchMark(ThroughputParameters parameters) {
+  public EncryptionMicroBenchMark(EncryptParameters parameters) {
     this.parameters = parameters;
   }
 
   public byte[] prepareData() {
-    if(parameters.isFileBased()){
-      return extractBytesFromPic(parameters.getFileName());
-    }else{
-      return extractBytesByRandom();
-    }
-  }
-
-  public byte[] extractBytesByRandom() {
-    byte[] data = new byte[parameters.getDataSize()];
-    Random r = new Random();
-    r.nextBytes(data);
-    return data;
-  }
-
-  public byte[] extractBytesFromPic(String ImageName){
-    // open image
-    File imgPath = new File(ImageName);
-
-    
-    try {
-      FileInputStream is = new FileInputStream(imgPath);
-      byte[] picData = new byte[(int)imgPath.length()];
-      readFully(is, picData, 0, picData.length);
-      parameters.setDataSize(picData.length);
-      return picData;
-    } catch (IOException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    }
-    return null;
-  }
-
-  public static void readFully(InputStream in, byte buf[],
-      int off, int len) throws IOException {
-    int toRead = len;
-    while (toRead > 0) {
-      int ret = in.read(buf, off, toRead);
-      if (ret < 0) {
-        throw new IOException( "Premature EOF from inputStream");
-      }
-      toRead -= ret;
-      off += ret;
-    }
+    return parameters.getData();
   }
 
   private CryptoCodec initialCryptoCodec() {
@@ -110,9 +92,7 @@ public class EncryptionMicroBenchMark {
     try {
       
       byte[] data = prepareData();
-      System.out.println("data size: " + parameters.getDataSize());
-      System.out.println("file name: " + parameters.getFileName());
-      System.out.println("execute times: " + parameters.getExecutionTimes());
+      LOG.info(parameters.toString());
       ByteArrayInputStream inputStream = new ByteArrayInputStream(prepareData());
       CryptoInputStream cryptoInputStream = initialCryptoInputStream(inputStream);
       
@@ -126,11 +106,9 @@ public class EncryptionMicroBenchMark {
         cryptoInputStream.read(data, 0, parameters.getDataSize());
         inputStream.reset();
       }
-      System.out.println("Complete !!");
-    } catch (FileNotFoundException e) {
-      e.printStackTrace();
+      LOG.info("Complete !!");
     } catch (IOException e) {
-      e.printStackTrace();
+      LOG.error(e.getMessage(), e);
     }
     isCompleted = true;
   }
