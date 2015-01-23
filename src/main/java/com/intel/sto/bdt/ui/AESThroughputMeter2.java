@@ -20,6 +20,7 @@ package com.intel.sto.bdt.ui;
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.Font;
+import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.text.DecimalFormat;
@@ -41,12 +42,13 @@ public class AESThroughputMeter2 implements ActionListener {
   private JFrame mainFrame = null;
   private JLabel timeUsedValue = null;
   private JLabel throughputValue = null;
+  private JLabel progressValue = null;
   private static final DecimalFormat formater = new DecimalFormat("0.00");
 
   public AESThroughputMeter2() {
     mainFrame = new JFrame("");
-    mainFrame.setBounds(100, 100, 600, 450);
-    mainFrame.setSize(600, 450);
+    mainFrame.setBounds(100, 100, 560, 450);
+    mainFrame.setSize(560, 450);
     mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     mainFrame.setResizable(false);
     //mainFrame.setUndecorated(true);
@@ -56,24 +58,24 @@ public class AESThroughputMeter2 implements ActionListener {
 
     // left top information
     JPanel panelDesc = new JPanel(null);
-    panelDesc.setBounds(0, 0, 300, 225);
+    panelDesc.setBounds(0, 0, 260, 225);
     drawLeftTop(panelDesc);
-    panelDesc.setBackground(new Color(0, 0, 0));
+    panelDesc.setBackground(new Color(255, 255, 255));
     mainPane.add(panelDesc);
 
     // right top picture
     JPanel panelRight = new JPanel(null);
-    panelRight.setBounds(300, 0, 300, 225);
+    panelRight.setBounds(260, 0, 300, 225);
     drawRightTop(panelRight);
-    panelRight.setBackground(new Color(0, 0, 0));
+    panelRight.setBackground(new Color(255, 255, 255));
     mainPane.add(panelRight);
 
     // time used and throughput
     JPanel panelBottom = new JPanel(null);
-    panelBottom.setBounds(0, 225, 600, 450);
+    panelBottom.setBounds(0, 225, 560, 450);
     drawButtom(panelBottom);
     mainPane.add(panelBottom);
-    panelBottom.setBackground(new Color(0, 0, 0));
+    panelBottom.setBackground(new Color(255, 255, 255));
 
     // frame.pack();
     mainFrame.setVisible(true);
@@ -82,38 +84,44 @@ public class AESThroughputMeter2 implements ActionListener {
   }
 
   private void drawLeftTop(JPanel container) {
+    JLabel titleLabel = new JLabel("AES-NI Disabled");
+    titleLabel.setFont(titleLabel.getFont().deriveFont(20f));
+    titleLabel.setBounds(20, 30, 240, 20);
+    titleLabel.setForeground(new Color(91, 155, 213));
+    container.add(titleLabel);
+
     JLabel imageSizeLabel = new JLabel("Image Size: ");
     imageSizeLabel.setFont(imageSizeLabel.getFont().deriveFont(20f));
-    imageSizeLabel.setBounds(30, 50, 150, 25);
+    imageSizeLabel.setBounds(20, 70, 130, 20);
     imageSizeLabel.setForeground(new Color(91, 155, 213));
     container.add(imageSizeLabel);
 
     JLabel imageSizeValue = new JLabel("3.65 MB");
-    imageSizeValue.setBounds(180, 50, 100, 25);
+    imageSizeValue.setBounds(160, 70, 100, 20);
     imageSizeValue.setFont(imageSizeValue.getFont().deriveFont(20f));
     imageSizeValue.setForeground(Color.RED);
     container.add(imageSizeValue);
 
     JLabel iterationsLabel = new JLabel("Iterations: ");
     iterationsLabel.setFont(iterationsLabel.getFont().deriveFont(20f));
-    iterationsLabel.setBounds(30, 100, 150, 25);
+    iterationsLabel.setBounds(20, 110, 130, 20);
     iterationsLabel.setForeground(new Color(91, 155, 213));
     container.add(iterationsLabel);
 
     JLabel iterationsValue = new JLabel("10000");
-    iterationsValue.setBounds(180, 100, 100, 25);
+    iterationsValue.setBounds(160, 110, 100, 20);
     iterationsValue.setFont(iterationsValue.getFont().deriveFont(20f));
     iterationsValue.setForeground(Color.RED);
     container.add(iterationsValue);
 
     JLabel totalSizeLabel = new JLabel("Total Size: ");
     totalSizeLabel.setFont(totalSizeLabel.getFont().deriveFont(20f));
-    totalSizeLabel.setBounds(30, 150, 150, 25);
+    totalSizeLabel.setBounds(20, 150, 130, 20);
     totalSizeLabel.setForeground(new Color(91, 155, 213));
     container.add(totalSizeLabel);
 
     JLabel totalSizeValue = new JLabel("35.69 GB");
-    totalSizeValue.setBounds(180, 150, 100, 25);
+    totalSizeValue.setBounds(160, 150, 100, 20);
     totalSizeValue.setFont(totalSizeValue.getFont().deriveFont(20f));
     totalSizeValue.setForeground(Color.RED);
     container.add(totalSizeValue);
@@ -122,8 +130,8 @@ public class AESThroughputMeter2 implements ActionListener {
   private void drawRightTop(JPanel container) {
     JLabel picRightLabel = new JLabel();
     picRightLabel.setFont(picRightLabel.getFont().deriveFont(Font.ITALIC));
-    updatePicture(picRightLabel, "image-thumbnail.JPG");
-    picRightLabel.setBounds(30, 30, 240, 195);
+    updatePicture(picRightLabel, "image-thumbnail.JPG", 260, 195);
+    picRightLabel.setBounds(20, 30, 260, 195);
     container.add(picRightLabel);
   }
 
@@ -131,40 +139,53 @@ public class AESThroughputMeter2 implements ActionListener {
     JLabel timeUsedLabel = new JLabel();
     timeUsedLabel.setFont(timeUsedLabel.getFont().deriveFont(30f));
     timeUsedLabel.setText("Time Used: ");
-    timeUsedLabel.setBounds(30, 50, 230, 30);
+    timeUsedLabel.setBounds(20, 30, 230, 30);
     timeUsedLabel.setForeground(new Color(91, 155, 213));
     container.add(timeUsedLabel);
 
     timeUsedValue = new JLabel("0");
-    timeUsedValue.setBounds(280, 50, 150, 30);
+    timeUsedValue.setBounds(280, 30, 60, 30);
     timeUsedValue.setFont(timeUsedValue.getFont().deriveFont(30f));
     timeUsedValue.setForeground(Color.RED);
     container.add(timeUsedValue);
 
     JLabel timeUnit = new JLabel("s");
     timeUnit.setFont(timeUnit.getFont().deriveFont(30f));
-    timeUnit.setBounds(450, 50, 100, 30);
+    timeUnit.setBounds(360, 30, 100, 30);
     timeUnit.setForeground(Color.RED);
     container.add(timeUnit);
 
     JLabel throughputLabel = new JLabel();
     throughputLabel.setText("Throughput: ");
     throughputLabel.setFont(throughputLabel.getFont().deriveFont(30f));
-    throughputLabel.setBounds(30, 100, 230, 30);
+    throughputLabel.setBounds(20, 80, 230, 30);
     throughputLabel.setForeground(new Color(91, 155, 213));
     container.add(throughputLabel);
 
     throughputValue = new JLabel("0.00");
     throughputValue.setFont(throughputValue.getFont().deriveFont(30f));
-    throughputValue.setBounds(280, 100, 150, 30);
+    throughputValue.setBounds(280, 80, 150, 30);
     throughputValue.setForeground(Color.RED);
     container.add(throughputValue);
 
     JLabel throughputUnit = new JLabel("MB/s");
     throughputUnit.setFont(throughputUnit.getFont().deriveFont(30f));
-    throughputUnit.setBounds(450, 100, 100, 30);
+    throughputUnit.setBounds(430, 80, 100, 30);
     throughputUnit.setForeground(Color.RED);
     container.add(throughputUnit);
+
+    JLabel progressLabel = new JLabel();
+    progressLabel.setText("Progress: ");
+    progressLabel.setFont(throughputLabel.getFont().deriveFont(30f));
+    progressLabel.setBounds(20, 130, 230, 30);
+    progressLabel.setForeground(new Color(91, 155, 213));
+    container.add(progressLabel);
+
+    progressValue = new JLabel("0%");
+    progressValue.setFont(progressValue.getFont().deriveFont(30f));
+    progressValue.setBounds(280, 130, 150, 30);
+    progressValue.setForeground(Color.RED);
+    container.add(progressValue);
   }
 
   @Override
@@ -172,16 +193,17 @@ public class AESThroughputMeter2 implements ActionListener {
     sw.execute();
   }
 
-  protected void updatePicture(JLabel pictureLabel, String filename) {
+  protected void updatePicture(JLabel pictureLabel, String filename, int width, int height) {
     //Get the icon corresponding to the image.
     ImageIcon icon = createImageIcon(filename);
-    pictureLabel.setIcon(icon);
 
     if (icon == null) {
       pictureLabel.setText("Missing Image");
     } else {
+      icon.setImage(icon.getImage().getScaledInstance(width, height, Image.SCALE_DEFAULT));
       pictureLabel.setText(null);
     }
+    pictureLabel.setIcon(icon);
   }
 
   /** Returns an ImageIcon, or null if the path was invalid. */
@@ -235,6 +257,7 @@ public class AESThroughputMeter2 implements ActionListener {
     if (latest != null) {
       timeUsedValue.setText(String.valueOf(latest.getExecutedTime() / 1000));
       throughputValue.setText(formater.format(latest.getAverageThroughput()));
+      progressValue.setText(String.valueOf((int)(latest.getPercentage() * 100)) + "%");
     }
   }
 

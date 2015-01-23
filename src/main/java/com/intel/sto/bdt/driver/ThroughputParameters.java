@@ -5,7 +5,7 @@ package com.intel.sto.bdt.driver;
  */
 public class ThroughputParameters {
   private int dataSize = 0;
-  private int executionTimes = 0;
+  private int iterations = 0;
   private String keyProviderName = "org.apache.hadoop.crypto.OpensslAesCtrCryptoCodec";
   private boolean isFileBased = false;
   private String fileName;
@@ -18,12 +18,12 @@ public class ThroughputParameters {
     this.dataSize = dataSize;
   }
 
-  public int getExecutionTimes() {
-    return executionTimes;
+  public int getIterations() {
+    return iterations;
   }
 
-  public void setExecutionTimes(int executionTimes) {
-    this.executionTimes = executionTimes;
+  public void setIterations(int iterations) {
+    this.iterations = iterations;
   }
 
   public String getKeyProviderName() {

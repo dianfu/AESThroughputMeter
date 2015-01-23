@@ -12,7 +12,7 @@ import java.util.*;
  * Created by root on 1/19/15.
  */
 public class EncryptionMicroBenchMark {
-  private int currentTime = 0;
+  private int currentIteration = 0;
   ThroughputParameters parameters;
   private long begin = 0;
   private long end = 0;
@@ -79,7 +79,16 @@ public class EncryptionMicroBenchMark {
     return codec;
   }
 
-  public CryptoInputStream initialCryptoInputStream(InputStream inputStream) throws IOException {
+  private CryptoOutputStream initialCryptoOutputStream(OutputStream outputStream) throws IOException {
+    CryptoCodec codec = initialCryptoCodec();
+    byte[] iv = new byte[16];
+    byte[] key = new byte[16];
+    CryptoOutputStream cryptoOutputStream =
+      new CryptoOutputStream(outputStream, codec, parameters.getDataSize(), key, iv);
+    return cryptoOutputStream;
+  }
+
+  private CryptoInputStream initialCryptoInputStream(InputStream inputStream) throws IOException {
     CryptoCodec codec = initialCryptoCodec();
     byte[] iv = new byte[16];
     byte[] key = new byte[16];
@@ -94,7 +103,7 @@ public class EncryptionMicroBenchMark {
 
   public double getPercentage() {
     if (isStarted) {
-      return ((double) currentTime / (double) parameters.getExecutionTimes());
+      return ((double) currentIteration / (double) parameters.getIterations());
     } else {
       return 0;
     }
@@ -112,7 +121,10 @@ public class EncryptionMicroBenchMark {
   public double getAverageThroughput() {
     if (isStarted) {
       end = Calendar.getInstance(TimeZone.getTimeZone("UTC")).getTimeInMillis();
-      return 1000.0 * currentTime * parameters.getDataSize() / ((end - begin) * 1024.0 * 1024.0);
+      /*System.out.println("iterations: " + currentTime);
+      System.out.println("data size: " + parameters.getDataSize());
+      System.out.println("time used: " + (end-begin) / 1000.0);*/
+      return 1000.0 * currentIteration * parameters.getDataSize() / ((end - begin) * 1024.0 * 1024.0);
     } else {
       return 0.00;
     }
@@ -120,24 +132,82 @@ public class EncryptionMicroBenchMark {
 
   public void encryptionThroughputTest() {
     try {
-      
       byte[] data = prepareData();
+
+      int entryCount = 280;
+      byte[][] datas = new byte[entryCount][data.length];
+      CryptoOutputStream[] cryptoOutputStreams = new CryptoOutputStream[entryCount];
+      ByteArrayOutputStream[] outputStreams = new ByteArrayOutputStream[entryCount];
+      for (int i = 0; i < entryCount; i++) {
+        datas[i] = data.clone();
+        outputStreams[i] = new ByteArrayOutputStream(data.length);
+        cryptoOutputStreams[i] = initialCryptoOutputStream(outputStreams[i]);
+      }
+
+      System.out.println("encryptionThroughputTest:");
       System.out.println("data size: " + parameters.getDataSize());
       System.out.println("file name: " + parameters.getFileName());
-      System.out.println("execute times: " + parameters.getExecutionTimes());
-      ByteArrayInputStream inputStream = new ByteArrayInputStream(prepareData());
-      CryptoInputStream cryptoInputStream = initialCryptoInputStream(inputStream);
+      System.out.println("execute times: " + parameters.getIterations());
 
-      for (int i = 0; i < 1000; i++) {
-        cryptoInputStream.read(data, 0, parameters.getDataSize());
-        inputStream.reset();
+      //warming up
+      for (int i = 0; i < 10000; i++) {
+        int entryPos = i % entryCount;
+        cryptoOutputStreams[entryPos].write(datas[entryPos], 0, datas[entryPos].length);
+        outputStreams[entryPos].reset();
       }
 
       begin = Calendar.getInstance(TimeZone.getTimeZone("UTC")).getTimeInMillis();
       isStarted = true;
-      for (currentTime = 0; currentTime < parameters.getExecutionTimes(); currentTime++) {
-        cryptoInputStream.read(data, 0, parameters.getDataSize());
-        inputStream.reset();
+      for (currentIteration = 0; currentIteration < parameters.getIterations(); currentIteration++) {
+        int entryPos = currentIteration % entryCount;
+        cryptoOutputStreams[entryPos].write(datas[entryPos], 0, datas[entryPos].length);
+        outputStreams[entryPos].reset();
+      }
+      System.out.println("Complete !!");
+    } catch (FileNotFoundException e) {
+      e.printStackTrace();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    isCompleted = true;
+  }
+
+  public void decryptionThroughputTest() {
+    try {
+      
+      byte[] data = prepareData();
+
+      int entryCount = 280;
+      byte[][] datas = new byte[entryCount][data.length];
+      byte[][] destDatas = new byte[entryCount][data.length];
+      CryptoInputStream[] cryptoInputStreams = new CryptoInputStream[entryCount];
+      ByteArrayInputStream[] inputStreams = new ByteArrayInputStream[entryCount];
+      for (int i = 0; i < entryCount; i++) {
+        datas[i] = data.clone();
+        inputStreams[i] = new ByteArrayInputStream(datas[i]);
+        cryptoInputStreams[i] = initialCryptoInputStream(inputStreams[i]);
+      }
+
+      System.out.println("decryptionThroughputTest");
+      System.out.println("data size: " + parameters.getDataSize());
+      System.out.println("file name: " + parameters.getFileName());
+      System.out.println("execute times: " + parameters.getIterations());
+      
+      ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+      CryptoOutputStream cryptoOutputStream = initialCryptoOutputStream(outputStream);
+
+      //warming up
+      for (int i = 0; i < 10000; i++) {
+        cryptoOutputStream.write(data, 0, data.length);
+        outputStream.reset();
+      }
+
+      begin = Calendar.getInstance(TimeZone.getTimeZone("UTC")).getTimeInMillis();
+      isStarted = true;
+      for (currentIteration = 0; currentIteration < parameters.getIterations(); currentIteration++) {
+        int entryPos = currentIteration % entryCount;
+        cryptoInputStreams[entryPos].read(destDatas[entryPos], 0, destDatas[entryPos].length);
+        inputStreams[entryPos].reset();
       }
       System.out.println("Complete !!");
     } catch (FileNotFoundException e) {

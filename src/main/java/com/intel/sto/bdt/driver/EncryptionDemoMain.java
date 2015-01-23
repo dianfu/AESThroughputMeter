@@ -9,7 +9,7 @@ import java.util.*;
 public class EncryptionDemoMain extends Thread {
   //static String defaultPicPath = EncryptionDemoMain.class.getClassLoader().getResource(
   //  "test_picture.jpg").getPath();
-  static String defaultPicPath = "/root/test_picture.jpg";
+  static String defaultPicPath = "/root/image-origin.JPG";
 
   final static String defaultDataSize = "52428800";
   final static String defaultExecutionTimes = "100000";
@@ -51,7 +51,7 @@ public class EncryptionDemoMain extends Thread {
 
     ThroughputParameters throughputParameters = new ThroughputParameters();
     throughputParameters.setDataSize(dataSize);
-    throughputParameters.setExecutionTimes(executionTimes);
+    throughputParameters.setIterations(executionTimes);
     throughputParameters.setKeyProviderName(openSSLCodecName);
     boolean isFileBased = Boolean.valueOf(prop.getProperty("file.based.test.enabled", "false"));
     if (isFileBased) {
@@ -91,5 +91,9 @@ public class EncryptionDemoMain extends Thread {
     microBenchMark.encryptionThroughputTest();
 
     System.out.println("average throughput is " + microBenchMark.getAverageThroughput());
+
+ //   microBenchMark.decryptionThroughputTest();
+
+//    System.out.println("average throughput is " + microBenchMark.getAverageThroughput());
   }
 }
